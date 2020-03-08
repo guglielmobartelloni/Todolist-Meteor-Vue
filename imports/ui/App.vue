@@ -16,13 +16,16 @@
     </header>
     <blaze-template template="loginButtons" tag="span"></blaze-template>
 
-    <form class="new-task" @submit.prevent="handleSubmit">
-      <input
-        type="text"
-        placeholder="Type to add new tasks"
-        v-model="newTask"
-      />
-    </form>
+    <template v-if="currentUser">
+      <form class="new-task" @submit.prevent="handleSubmit">
+        <input
+          type="text"
+          placeholder="Type to add new tasks"
+          v-model="newTask"
+        />
+      </form>
+    </template>
+
     <ul>
       <Task v-for="task in tasks" v-bind:key="task._id" v-bind:task="task" />
     </ul>
@@ -33,6 +36,7 @@
 import Vue from "vue";
 import Task from "./Task.vue";
 import { Tasks } from "../api/tasks";
+import { Meteor } from "meteor/meteor";
 
 export default {
   components: {
@@ -51,7 +55,9 @@ export default {
     handleSubmit() {
       Tasks.insert({
         text: this.newTask,
-        createdAt: new Date()
+        createdAt: new Date(),
+        owner: Meteor.userId(), // _id of logged in user
+        username: Meteor.user().username // username of logged in user
       });
 
       this.newTask = "";
@@ -61,6 +67,9 @@ export default {
     },
     incompleteCount() {
       return Tasks.find({ checked: { $ne: true } }).count();
+    },
+    currentUser() {
+      return Meteor.user();
     }
   },
   meteor: {
